@@ -32,3 +32,6 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# api keys
+lib/tmdb-key.ts

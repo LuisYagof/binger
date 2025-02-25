@@ -1,4 +1,4 @@
-const API_KEY = 'b650f9f24735a4d1857b39fa109e9243';
+import { API_KEY } from '@/lib/tmdb-key';
 const BASE_URL = 'https://api.themoviedb.org/3';
 
 export const searchShows = async (query: string) => {
