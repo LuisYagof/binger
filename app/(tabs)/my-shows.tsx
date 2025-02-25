@@ -16,9 +16,9 @@ import {
   getFollowedShows,
   unfollowShow,
   initDatabase,
-  Show,
   testDatabase,
 } from '@/lib/db';
+import { type Show } from '@/types/db.types';
 
 export default function MyShowsScreen() {
   const [shows, setShows] = useState<Show[]>([]);

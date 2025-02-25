@@ -1,22 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
+  StyleSheet,
   FlatList,
   TouchableOpacity,
-  StyleSheet,
   ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import { Check, CircleCheck as CheckCircle2 } from 'lucide-react-native';
+import { CheckCircle2, Check } from 'lucide-react-native';
 import { getShowDetails, getShowSeasons } from '@/lib/tmdb';
-import { getShowEpisodes, markEpisodeAsWatched, addEpisode } from '@/lib/db';
-import { Episode } from '@/types/shows.types';
+import { getShowEpisodes, addEpisode, markEpisodeAsWatched } from '@/lib/db';
+import { type Episode, type ShowDetails } from '@/types/tmdb.types';
 
 export default function ShowDetailScreen() {
   const { id } = useLocalSearchParams();
-  const [show, setShow] = useState(null);
-  const [episodes, setEpisodes] = useState([] as Episode[]);
+  const [show, setShow] = useState(null as ShowDetails | null);
+  const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadShowData = async () => {
@@ -24,34 +24,52 @@ export default function ShowDetailScreen() {
       const showDetails = await getShowDetails(Number(id));
       setShow(showDetails);
 
-      // Load all seasons
-      const seasonsData = await Promise.all(
-        Array.from({ length: showDetails.number_of_seasons }, (_, i) =>
-          getShowSeasons(Number(id), i + 1)
-        )
+      const localEpisodes = await getShowEpisodes(Number(id));
+      console.log(
+        `Retrieved ${localEpisodes.length} local episodes for show ${id}`
       );
 
-      // Get local episodes data
-      const localEpisodes = await getShowEpisodes(Number(id));
       const localEpisodesMap = new Map(
         localEpisodes.map((episode) => [episode.id, episode])
       );
 
-      // Combine and format episodes data
-      const allEpisodes = seasonsData.flatMap((season) =>
-        season.episodes.map((episode) => ({
-          ...episode,
-          show_id: Number(id),
-          watched: localEpisodesMap.has(episode.id)
-            ? localEpisodesMap.get(episode.id).watched
-            : false,
-        }))
-      );
+      if (localEpisodes.length === 0 || showDetails.number_of_seasons > 0) {
+        console.log(
+          `Fetching ${showDetails.number_of_seasons} seasons from TMDB API`
+        );
 
-      // Save episodes to local database
-      await Promise.all(allEpisodes.map((episode) => addEpisode(episode)));
+        const seasonsData = await Promise.all(
+          Array.from({ length: showDetails.number_of_seasons }, (_, i) =>
+            getShowSeasons(Number(id), i + 1)
+          )
+        );
 
-      setEpisodes(allEpisodes);
+        const remoteEpisodes = seasonsData.flatMap((season) =>
+          season.episodes.map((episode: Episode) => {
+            const localEpisode = localEpisodesMap.get(episode.id);
+            return {
+              id: episode.id,
+              show_id: Number(id),
+              season_number: episode.season_number,
+              episode_number: episode.episode_number,
+              name: episode.name,
+              overview: episode.overview || '',
+              air_date: episode.air_date || '',
+              watched: localEpisode ? localEpisode.watched : false,
+            };
+          })
+        );
+
+        console.log(`Saving ${remoteEpisodes.length} episodes to database`);
+
+        for (const episode of remoteEpisodes) {
+          await addEpisode(episode);
+        }
+
+        setEpisodes(remoteEpisodes);
+      } else {
+        setEpisodes(localEpisodes);
+      }
     } catch (error) {
       console.error('Error loading show data:', error);
     } finally {
@@ -61,9 +79,13 @@ export default function ShowDetailScreen() {
 
   const toggleWatched = async (episodeId: number, watched: boolean) => {
     try {
+      console.log(
+        `Toggling episode ${episodeId} to ${!watched ? 'watched' : 'unwatched'}`
+      );
       await markEpisodeAsWatched(episodeId, !watched);
-      setEpisodes(
-        episodes.map((episode) =>
+
+      setEpisodes((prevEpisodes) =>
+        prevEpisodes.map((episode) =>
           episode.id === episodeId ? { ...episode, watched: !watched } : episode
         )
       );
@@ -80,6 +102,7 @@ export default function ShowDetailScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
+        <Text style={styles.loadingText}>Loading episodes...</Text>
       </View>
     );
   }
@@ -89,18 +112,35 @@ export default function ShowDetailScreen() {
       <FlatList
         data={episodes}
         keyExtractor={(item) => item.id.toString()}
+        ListHeaderComponent={
+          show && (
+            <View style={styles.headerContainer}>
+              <Text style={styles.showTitle}>{show.name}</Text>
+              <Text style={styles.showInfo}>
+                {show.number_of_seasons} Season
+                {show.number_of_seasons !== 1 ? 's' : ''} •
+                {show.number_of_episodes} Episode
+                {show.number_of_episodes !== 1 ? 's' : ''}
+              </Text>
+              <Text style={styles.showOverview}>{show.overview}</Text>
+            </View>
+          )
+        }
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.episodeCard}
             onPress={() => toggleWatched(item.id, item.watched)}
+            activeOpacity={0.7}
           >
             <View style={styles.episodeInfo}>
               <Text style={styles.episodeTitle}>
                 S{item.season_number} E{item.episode_number}: {item.name}
               </Text>
-              <Text style={styles.airDate}>Aired: {item.air_date}</Text>
+              <Text style={styles.airDate}>
+                Aired: {item.air_date || 'Unknown'}
+              </Text>
               <Text numberOfLines={2} style={styles.overview}>
-                {item.overview}
+                {item.overview || 'No description available'}
               </Text>
             </View>
             <View style={styles.watchedIndicator}>
@@ -112,6 +152,11 @@ export default function ShowDetailScreen() {
             </View>
           </TouchableOpacity>
         )}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No episodes found</Text>
+          </View>
+        }
       />
     </View>
   );
@@ -126,6 +171,39 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#666',
+  },
+  headerContainer: {
+    padding: 16,
+    backgroundColor: 'white',
+    margin: 16,
+    marginBottom: 0,
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  showTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  showInfo: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+  },
+  showOverview: {
+    fontSize: 14,
+    color: '#444',
+    lineHeight: 20,
   },
   episodeCard: {
     flexDirection: 'row',
@@ -160,5 +238,14 @@ const styles = StyleSheet.create({
   },
   watchedIndicator: {
     justifyContent: 'center',
+  },
+  emptyContainer: {
+    padding: 32,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
   },
 });

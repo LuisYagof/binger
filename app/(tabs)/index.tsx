@@ -12,9 +12,10 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { searchShows } from '@/lib/tmdb';
-import { followShow, initDatabase, Show } from '@/lib/db';
+import { followShow, initDatabase } from '@/lib/db';
 import { Plus } from 'lucide-react-native';
-import { TMDBShow } from '@/types/shows.types';
+import { type TMDBShow } from '@/types/tmdb.types';
+import { type Show } from '@/types/db.types';
 
 const convertToDbShow = (tmdbShow: TMDBShow): Show => {
   return {

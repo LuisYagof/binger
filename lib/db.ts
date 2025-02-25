@@ -1,29 +1,10 @@
+import { Episode, Show } from '@/types/db.types';
 import * as SQLite from 'expo-sqlite';
-
-export interface Show {
-    id: number;
-    name: string;
-    overview: string;
-    poster_path: string;
-    first_air_date: string;
-}
-
-export interface Episode {
-    id: number;
-    show_id: number;
-    season_number: number;
-    episode_number: number;
-    name: string;
-    overview: string;
-    air_date: string;
-    watched: boolean;
-}
 
 let db: SQLite.SQLiteDatabase;
 
 export const initDatabase = async (): Promise<void> => {
     try {
-        // Open the database
         db = SQLite.openDatabaseSync('tvshows.db');
         await createTablesIfNeeded();
         console.log("Database initialized successfully");
@@ -35,7 +16,6 @@ export const initDatabase = async (): Promise<void> => {
 
 const createTablesIfNeeded = async (): Promise<void> => {
     try {
-        // Create the shows table
         db.execSync(`
       CREATE TABLE IF NOT EXISTS shows (
         id INTEGER PRIMARY KEY NOT NULL,
@@ -46,7 +26,6 @@ const createTablesIfNeeded = async (): Promise<void> => {
       );
     `);
 
-        // Create the episodes table
         db.execSync(`
       CREATE TABLE IF NOT EXISTS episodes (
         id INTEGER PRIMARY KEY NOT NULL,
@@ -74,7 +53,6 @@ export const followShow = async (show: Show): Promise<void> => {
     }
 
     try {
-        // Using prepareSync and executeSync correctly
         const statement = db.prepareSync(
             'INSERT OR REPLACE INTO shows (id, name, overview, poster_path, first_air_date) VALUES (?, ?, ?, ?, ?)'
         );
@@ -87,7 +65,6 @@ export const followShow = async (show: Show): Promise<void> => {
             show.first_air_date || ''
         ]);
 
-        // Properly release resources
         statement.finalizeSync();
 
         console.log(`Show ${show.name} (ID: ${show.id}) saved successfully`);
@@ -104,12 +81,10 @@ export const unfollowShow = async (showId: number): Promise<void> => {
     }
 
     try {
-        // Delete episodes first
         const deleteEpisodesStmt = db.prepareSync('DELETE FROM episodes WHERE show_id = ?');
         deleteEpisodesStmt.executeSync([showId]);
         deleteEpisodesStmt.finalizeSync();
 
-        // Then delete the show
         const deleteShowStmt = db.prepareSync('DELETE FROM shows WHERE id = ?');
         deleteShowStmt.executeSync([showId]);
         deleteShowStmt.finalizeSync();
@@ -128,18 +103,15 @@ export const getFollowedShows = async (): Promise<Show[]> => {
     }
 
     try {
-        // Use a prepared statement approach
         const statement = db.prepareSync('SELECT * FROM shows ORDER BY name');
         const result = statement.executeSync();
 
         const shows: Show[] = [];
 
         try {
-            // Get all rows using the getAllSync method on the result object
             const rows = result.getAllSync() as Show[];
             console.log("Raw rows data:", rows);
 
-            // Process rows if they exist
             if (rows && Array.isArray(rows)) {
                 for (let i = 0; i < rows.length; i++) {
                     const row = rows[i];
@@ -156,7 +128,6 @@ export const getFollowedShows = async (): Promise<Show[]> => {
             console.error("Error getting rows:", getAllError);
         }
 
-        // Always finalize the statement
         statement.finalizeSync();
 
         console.log(`Retrieved ${shows.length} shows`);
@@ -226,22 +197,15 @@ export const getShowEpisodes = async (showId: number): Promise<Episode[]> => {
     }
 
     try {
-        // Use a prepared statement with parameters
-        const statement = db.prepareSync(`
-      SELECT * FROM episodes 
-      WHERE show_id = ? 
-      ORDER BY season_number, episode_number
-    `);
+        const statement = db.prepareSync(`SELECT * FROM episodes WHERE show_id = ${showId} ORDER BY season_number, episode_number`);
+        const result = statement.executeSync();
 
-        const result = statement.executeSync([showId]);
-        statement.finalizeSync();
-
-        // Process results
         const episodes: Episode[] = [];
+        const rows = result.getAllSync() as Episode[];
+        console.log("Raw rows data:", rows);
 
-        if (result && Array.isArray(result)) {
-            for (let i = 0; i < result.length; i++) {
-                const row = result[i];
+        if (rows && Array.isArray(rows) && rows.length > 0) {
+            for (const row of rows) {
                 episodes.push({
                     id: Number(row.id),
                     show_id: Number(row.show_id),
@@ -255,6 +219,7 @@ export const getShowEpisodes = async (showId: number): Promise<Episode[]> => {
             }
         }
 
+        statement.finalizeSync();
         console.log(`Retrieved ${episodes.length} episodes for show ID ${showId}`);
         return Promise.resolve(episodes);
     } catch (error) {
@@ -263,14 +228,12 @@ export const getShowEpisodes = async (showId: number): Promise<Episode[]> => {
     }
 };
 
-// Utility function to help with debugging
 export const testDatabase = async (): Promise<string> => {
     try {
         await initDatabase();
 
         console.log("Running database test...");
 
-        // Test show
         const testShow: Show = {
             id: 999999,
             name: "Test Show",
@@ -279,17 +242,14 @@ export const testDatabase = async (): Promise<string> => {
             first_air_date: "2025-01-01"
         };
 
-        // Save the test show
         await followShow(testShow);
         console.log("Successfully saved test show");
 
-        // Get shows to verify it saved
         const shows = await getFollowedShows();
         console.log("Test - Retrieved shows:", shows);
 
         const testShowFound = shows.some(s => s.id === 999999);
 
-        // Clean up by removing the test show
         await unfollowShow(999999);
         console.log("Successfully removed test show");
 

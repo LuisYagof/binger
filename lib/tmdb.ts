@@ -1,4 +1,5 @@
 import { API_KEY } from '@/lib/tmdb-key';
+import { type ShowDetails } from '@/types/tmdb.types';
 const BASE_URL = 'https://api.themoviedb.org/3';
 
 export const searchShows = async (query: string) => {
@@ -9,7 +10,7 @@ export const searchShows = async (query: string) => {
   return data.results;
 };
 
-export const getShowDetails = async (showId: number) => {
+export const getShowDetails = async (showId: number): Promise<ShowDetails> => {
   const response = await fetch(
     `${BASE_URL}/tv/${showId}?api_key=${API_KEY}`
   );

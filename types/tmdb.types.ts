@@ -25,3 +25,10 @@ export interface Episode {
     air_date: string;
     watched: boolean;
 }
+
+export interface ShowDetails {
+    name: string
+    number_of_episodes: number
+    number_of_seasons: number
+    overview: string
+}
