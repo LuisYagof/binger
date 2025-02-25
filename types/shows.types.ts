@@ -14,3 +14,14 @@ export interface TMDBShow {
     vote_average: number;
     vote_count: number;
 }
+
+export interface Episode {
+    id: number;
+    show_id: number;
+    season_number: number;
+    episode_number: number;
+    name: string;
+    overview: string;
+    air_date: string;
+    watched: boolean;
+}

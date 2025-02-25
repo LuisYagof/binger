@@ -8,14 +8,15 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import { getShowDetails, getShowSeasons } from '../../lib/tmdb';
-import { getShowEpisodes, markEpisodeAsWatched, addEpisode } from '../../lib/db';
 import { Check, CircleCheck as CheckCircle2 } from 'lucide-react-native';
+import { getShowDetails, getShowSeasons } from '@/lib/tmdb';
+import { getShowEpisodes, markEpisodeAsWatched, addEpisode } from '@/lib/db';
+import { Episode } from '@/types/shows.types';
 
 export default function ShowDetailScreen() {
   const { id } = useLocalSearchParams();
   const [show, setShow] = useState(null);
-  const [episodes, setEpisodes] = useState([]);
+  const [episodes, setEpisodes] = useState([] as Episode[]);
   const [loading, setLoading] = useState(true);
 
   const loadShowData = async () => {
@@ -33,12 +34,12 @@ export default function ShowDetailScreen() {
       // Get local episodes data
       const localEpisodes = await getShowEpisodes(Number(id));
       const localEpisodesMap = new Map(
-        localEpisodes.map(episode => [episode.id, episode])
+        localEpisodes.map((episode) => [episode.id, episode])
       );
 
       // Combine and format episodes data
-      const allEpisodes = seasonsData.flatMap(season =>
-        season.episodes.map(episode => ({
+      const allEpisodes = seasonsData.flatMap((season) =>
+        season.episodes.map((episode) => ({
           ...episode,
           show_id: Number(id),
           watched: localEpisodesMap.has(episode.id)
@@ -48,9 +49,7 @@ export default function ShowDetailScreen() {
       );
 
       // Save episodes to local database
-      await Promise.all(
-        allEpisodes.map(episode => addEpisode(episode))
-      );
+      await Promise.all(allEpisodes.map((episode) => addEpisode(episode)));
 
       setEpisodes(allEpisodes);
     } catch (error) {
@@ -63,11 +62,11 @@ export default function ShowDetailScreen() {
   const toggleWatched = async (episodeId: number, watched: boolean) => {
     try {
       await markEpisodeAsWatched(episodeId, !watched);
-      setEpisodes(episodes.map(episode =>
-        episode.id === episodeId
-          ? { ...episode, watched: !watched }
-          : episode
-      ));
+      setEpisodes(
+        episodes.map((episode) =>
+          episode.id === episodeId ? { ...episode, watched: !watched } : episode
+        )
+      );
     } catch (error) {
       console.error('Error toggling watched status:', error);
     }
@@ -93,7 +92,8 @@ export default function ShowDetailScreen() {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.episodeCard}
-            onPress={() => toggleWatched(item.id, item.watched)}>
+            onPress={() => toggleWatched(item.id, item.watched)}
+          >
             <View style={styles.episodeInfo}>
               <Text style={styles.episodeTitle}>
                 S{item.season_number} E{item.episode_number}: {item.name}
