@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,38 +8,91 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { searchShows } from '../../lib/tmdb';
-import { followShow } from '../../lib/db';
+import { searchShows } from '@/lib/tmdb';
+import { followShow, initDatabase, Show } from '@/lib/db';
 import { Plus } from 'lucide-react-native';
+import { TMDBShow } from '@/types/shows.types';
+
+const convertToDbShow = (tmdbShow: TMDBShow): Show => {
+  return {
+    id: tmdbShow.id,
+    name: tmdbShow.name,
+    overview: tmdbShow.overview || '',
+    poster_path: tmdbShow.poster_path || '',
+    first_air_date: tmdbShow.first_air_date || '',
+  };
+};
 
 export default function SearchScreen() {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState([] as TMDBShow[]);
   const [loading, setLoading] = useState(false);
+  const [isDbInit, setIsDbInit] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const setupDb = async () => {
+      try {
+        await initDatabase();
+        console.log('Database initialized successfully');
+        setIsDbInit(true);
+      } catch (error) {
+        console.error('Failed to initialize database:', error);
+        Alert.alert(
+          'Database Error',
+          'Failed to initialize the database. Please restart the app.'
+        );
+      }
+    };
+
+    setupDb();
+  }, []);
 
   const handleSearch = async () => {
     if (!query.trim()) return;
-    
+
     setLoading(true);
     try {
       const shows = await searchShows(query);
       setResults(shows);
+      console.log(`Found ${shows.length} shows for query: ${query}`);
     } catch (error) {
       console.error('Search error:', error);
+      Alert.alert(
+        'Search Error',
+        'Failed to search for shows. Please try again.'
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFollow = async (show) => {
+  const handleFollow = async (show: TMDBShow) => {
+    if (!isDbInit) {
+      Alert.alert(
+        'Not Ready',
+        'Database is still initializing. Please try again in a moment.'
+      );
+      return;
+    }
+
     try {
-      await followShow(show);
-      router.push('/my-shows');
+      const dbShow = convertToDbShow(show);
+      console.log('Following show:', dbShow.name, `(ID: ${dbShow.id})`);
+      await followShow(dbShow);
+      Alert.alert('Success', `You are now following "${show.name}"`, [
+        { text: 'View My Shows', onPress: () => router.push('/my-shows') },
+        { text: 'OK', style: 'cancel' },
+      ]);
     } catch (error) {
       console.error('Follow error:', error);
+      Alert.alert(
+        'Error',
+        `Failed to follow "${show.name}". Please try again.`
+      );
     }
   };
 
@@ -80,7 +133,8 @@ export default function SearchScreen() {
                 </Text>
                 <TouchableOpacity
                   style={styles.followButton}
-                  onPress={() => handleFollow(item)}>
+                  onPress={() => handleFollow(item)}
+                >
                   <Plus size={20} color="white" />
                   <Text style={styles.followButtonText}>Follow Show</Text>
                 </TouchableOpacity>

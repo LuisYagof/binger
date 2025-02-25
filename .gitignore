@@ -35,3 +35,11 @@ yarn-error.*
 
 # api keys
 lib/tmdb-key.ts
+
+# misc
+drafts/
+
+# build
+build/
+dist/
+android/

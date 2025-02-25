@@ -19,6 +19,9 @@
     "plugins": ["expo-router"],
     "experiments": {
       "typedRoutes": true
+    },
+    "android": {
+      "package": "com.secretspot.binger"
     }
   }
 }

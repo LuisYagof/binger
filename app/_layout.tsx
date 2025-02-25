@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { initDatabase } from '../lib/db';
+import { initDatabase } from '@/lib/db';
 
 declare global {
   interface Window {
@@ -21,10 +21,7 @@ export default function RootLayout() {
   return (
     <>
       <Stack>
-        <Stack.Screen
-          name="(tabs)"
-          options={{ headerShown: false }}
-        />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
           name="show/[id]"
           options={{
