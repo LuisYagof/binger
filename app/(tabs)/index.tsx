@@ -108,6 +108,14 @@ export default function SearchScreen() {
           onSubmitEditing={handleSearch}
           returnKeyType="search"
         />
+        {query.length > 0 && (
+          <TouchableOpacity
+            style={styles.clearButton}
+            onPress={() => setQuery('')}
+          >
+            <Text style={styles.clearButtonText}>✕</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {loading ? (
@@ -158,6 +166,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
+    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   searchInput: {
     height: 40,
@@ -165,6 +176,25 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 16,
     fontSize: 16,
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    paddingRight: 40,
+  },
+  clearButton: {
+    position: 'absolute',
+    right: 26,
+    height: 20,
+    width: 20,
+    borderRadius: 10,
+    backgroundColor: '#ccc',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  clearButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   showCard: {
     flexDirection: 'row',
