@@ -13,7 +13,7 @@ import {
 import { useRouter } from 'expo-router';
 import { searchShows } from '@/lib/tmdb';
 import { followShow, initDatabase } from '@/lib/db';
-import { Plus } from 'lucide-react-native';
+import { AntDesign } from '@expo/vector-icons';
 import { type TMDBShow } from '@/types/tmdb.types';
 import { type Show } from '@/types/db.types';
 
@@ -144,7 +144,7 @@ export default function SearchScreen() {
                   style={styles.followButton}
                   onPress={() => handleFollow(item)}
                 >
-                  <Plus size={20} color="white" />
+                  <AntDesign name="pluscircleo" size={20} color="white" />
                   <Text style={styles.followButtonText}>Follow Show</Text>
                 </TouchableOpacity>
               </View>

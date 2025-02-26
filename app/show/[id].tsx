@@ -9,12 +9,7 @@ import {
   SectionList,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import {
-  CheckCircle2,
-  Check,
-  ChevronDown,
-  ChevronRight,
-} from 'lucide-react-native';
+import { AntDesign, Entypo } from '@expo/vector-icons';
 import { getShowDetails, getShowSeasons } from '@/lib/tmdb';
 import { getShowEpisodes, addEpisode, markEpisodeAsWatched } from '@/lib/db';
 import { Episode } from '@/types/db.types';
@@ -277,9 +272,9 @@ export default function ShowDetailScreen() {
               onPress={() => toggleSeasonExpanded(season.season_number)}
             >
               {season.expanded ? (
-                <ChevronDown size={20} color="#007AFF" />
+                <Entypo name="chevron-down" size={20} color="#007AFF" />
               ) : (
-                <ChevronRight size={20} color="#007AFF" />
+                <Entypo name="chevron-right" size={20} color="#007AFF" />
               )}
               <Text style={styles.seasonTitle}>{season.name}</Text>
 
@@ -299,11 +294,11 @@ export default function ShowDetailScreen() {
                     : 'Mark All Watched'}
                 </Text>
                 {allEpisodesWatched(season.season_number) ? (
-                  <CheckCircle2 size={18} color="#34C759" />
+                  <AntDesign name="checkcircleo" size={18} color="#34C759" />
                 ) : anyEpisodesWatched(season.season_number) ? (
-                  <CheckCircle2 size={18} color="#8E8E93" />
+                  <AntDesign name="checkcircleo" size={18} color="#8E8E93" />
                 ) : (
-                  <Check size={18} color="#8E8E93" />
+                  <AntDesign name="checkcircle" size={18} color="#8E8E93" />
                 )}
               </TouchableOpacity>
             </TouchableOpacity>
@@ -333,9 +328,17 @@ export default function ShowDetailScreen() {
                     </View>
                     <View style={styles.watchedIndicator}>
                       {episode.watched ? (
-                        <CheckCircle2 size={24} color="#34C759" />
+                        <AntDesign
+                          name="checkcircleo"
+                          size={24}
+                          color="#34C759"
+                        />
                       ) : (
-                        <Check size={24} color="#8E8E93" />
+                        <AntDesign
+                          name="checkcircle"
+                          size={24}
+                          color="#8E8E93"
+                        />
                       )}
                     </View>
                   </TouchableOpacity>

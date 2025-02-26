@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   Linking,
 } from 'react-native';
-import { ExternalLink } from 'lucide-react-native';
+import { EvilIcons } from '@expo/vector-icons';
 import { exportData, importData } from '@/lib/db-backup';
 
 export default function SettingsScreen() {
@@ -19,7 +19,7 @@ export default function SettingsScreen() {
           onPress={() => Linking.openURL('https://www.themoviedb.org/')}
         >
           <Text style={styles.linkText}>Powered by TMDB</Text>
-          <ExternalLink size={20} color="#007AFF" />
+          <EvilIcons name="external-link" size={20} color="#007AFF" />
         </TouchableOpacity>
       </View>
 

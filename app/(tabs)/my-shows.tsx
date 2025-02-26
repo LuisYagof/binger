@@ -11,7 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Trash2, Recycle } from 'lucide-react-native';
+import { EvilIcons, FontAwesome6 } from '@expo/vector-icons';
 import {
   getFollowedShows,
   unfollowShow,
@@ -116,7 +116,7 @@ export default function MyShowsScreen() {
         }}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
-        <Recycle size={20} color="#bababa" />
+        <FontAwesome6 name="recycle" size={20} color="#bababa" />
       </TouchableOpacity> */}
 
       {shows.length === 0 ? (
@@ -173,7 +173,7 @@ export default function MyShowsScreen() {
                 onPress={() => handleUnfollow(item.id, item.name)}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <Trash2 size={20} color="#FF3B30" />
+                <EvilIcons name="trash" size={20} color="#FF3B30" />
               </TouchableOpacity>
             </TouchableOpacity>
           )}
