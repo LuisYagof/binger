@@ -1,6 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Linking,
+} from 'react-native';
 import { ExternalLink } from 'lucide-react-native';
+import { exportData, importData } from '@/lib/db-backup';
 
 export default function SettingsScreen() {
   return (
@@ -9,9 +16,21 @@ export default function SettingsScreen() {
         <Text style={styles.sectionTitle}>About</Text>
         <TouchableOpacity
           style={styles.link}
-          onPress={() => Linking.openURL('https://www.themoviedb.org/')}>
+          onPress={() => Linking.openURL('https://www.themoviedb.org/')}
+        >
           <Text style={styles.linkText}>Powered by TMDB</Text>
           <ExternalLink size={20} color="#007AFF" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Backup</Text>
+        <TouchableOpacity style={styles.link} onPress={() => exportData()}>
+          <Text style={styles.linkText}>Export data</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.link} onPress={() => importData()}>
+          <Text style={styles.linkText}>Import data</Text>
         </TouchableOpacity>
       </View>
     </View>
