@@ -11,17 +11,16 @@
     "ios": {
       "supportsTablet": true
     },
-    "web": {
-      "bundler": "metro",
-      "output": "single",
-      "favicon": "./assets/images/favicon.png"
-    },
     "plugins": ["expo-router"],
     "experiments": {
       "typedRoutes": true
     },
     "android": {
-      "package": "com.secretspot.binger"
+      "package": "com.secretspot.binger",
+      "adaptativeIcon": {
+        "foregroundImage": "./assets/images/foreground.png",
+        "backgroundColor": "#F5CF87"
+      }
     }
   }
 }
