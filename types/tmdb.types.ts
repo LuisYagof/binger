@@ -32,3 +32,10 @@ export interface ShowDetails {
     number_of_seasons: number
     overview: string
 }
+
+export interface Season {
+    season_number: number;
+    name: string;
+    expanded: boolean;
+    episodes: Episode[];
+}
