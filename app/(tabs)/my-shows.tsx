@@ -62,12 +62,6 @@ export default function MyShowsScreen() {
     setRefreshing(false);
   };
 
-  function reconnectDB() {
-    testDatabase();
-    setup();
-    handleRefresh();
-  }
-
   const handleUnfollow = async (showId: number, showName: string) => {
     Alert.alert(
       'Unfollow Show',
@@ -108,17 +102,6 @@ export default function MyShowsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* TODO: refresh button */}
-      {/* <TouchableOpacity
-        style={styles.refreshButton}
-        onPress={() => {
-          reconnectDB();
-        }}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      >
-        <FontAwesome6 name="recycle" size={20} color="#bababa" />
-      </TouchableOpacity> */}
-
       {shows.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>
@@ -129,6 +112,16 @@ export default function MyShowsScreen() {
             onPress={() => router.push('/')}
           >
             <Text style={styles.searchButtonText}>Search for Shows</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.refreshButton}
+            onPress={() => {
+              handleRefresh();
+            }}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <FontAwesome6 name="recycle" size={20} color="#bababa" />
           </TouchableOpacity>
         </View>
       ) : (
