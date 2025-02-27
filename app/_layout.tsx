@@ -3,20 +3,20 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { initDatabase } from '@/lib/db';
 
-declare global {
-  interface Window {
-    frameworkReady?: () => void;
-  }
-}
-
 export default function RootLayout() {
   useEffect(() => {
-    const init = async () => {
-      await initDatabase();
-      window.frameworkReady?.();
-    };
     init();
   }, []);
+
+  async function init() {
+    try {
+      console.log('Initializing database...');
+      await initDatabase();
+      console.log('Database initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize database:', error);
+    }
+  }
 
   return (
     <>
