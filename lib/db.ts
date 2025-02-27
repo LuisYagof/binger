@@ -1,5 +1,5 @@
-import { Episode, Show } from '@/types/db.types';
 import * as SQLite from 'expo-sqlite';
+import { Episode, Show } from '@/types/db.types';
 
 let db: SQLite.SQLiteDatabase;
 

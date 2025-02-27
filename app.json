@@ -11,15 +11,26 @@
     "ios": {
       "supportsTablet": true
     },
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router"
+    ],
     "experiments": {
       "typedRoutes": true
     },
     "android": {
       "package": "com.secretspot.binger",
-      "adaptativeIcon": {
+      "adaptiveIcon": {
         "foregroundImage": "./assets/images/foreground.png",
         "backgroundColor": "#F5CF87"
+      },
+      "jsEngine": "hermes"
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "89d58d58-22e7-4363-ae53-f59d783320ba"
       }
     }
   }
