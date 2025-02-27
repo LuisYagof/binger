@@ -1,7 +1,10 @@
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { initDatabase } from '@/lib/db';
+
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   useEffect(() => {
@@ -13,8 +16,10 @@ export default function RootLayout() {
       console.log('Initializing database...');
       await initDatabase();
       console.log('Database initialized successfully');
+      await SplashScreen.hideAsync();
     } catch (error) {
       console.error('Failed to initialize database:', error);
+      await SplashScreen.hideAsync();
     }
   }
 
