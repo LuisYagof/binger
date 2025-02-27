@@ -11,7 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { EvilIcons, FontAwesome6 } from '@expo/vector-icons';
+import { FontAwesome, FontAwesome6 } from '@expo/vector-icons';
 import {
   getFollowedShows,
   unfollowShow,
@@ -166,7 +166,7 @@ export default function MyShowsScreen() {
                 onPress={() => handleUnfollow(item.id, item.name)}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <EvilIcons name="trash" size={20} color="#FF3B30" />
+                <FontAwesome name="trash-o" size={20} color="#FF3B30" />
               </TouchableOpacity>
             </TouchableOpacity>
           )}

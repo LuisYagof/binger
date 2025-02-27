@@ -294,11 +294,11 @@ export default function ShowDetailScreen() {
                     : 'Mark All Watched'}
                 </Text>
                 {allEpisodesWatched(season.season_number) ? (
-                  <AntDesign name="checkcircleo" size={18} color="#34C759" />
+                  <AntDesign name="checkcircle" size={18} color="#34C759" />
                 ) : anyEpisodesWatched(season.season_number) ? (
                   <AntDesign name="checkcircleo" size={18} color="#8E8E93" />
                 ) : (
-                  <AntDesign name="checkcircle" size={18} color="#8E8E93" />
+                  <AntDesign name="checkcircleo" size={18} color="#8E8E93" />
                 )}
               </TouchableOpacity>
             </TouchableOpacity>
@@ -329,13 +329,13 @@ export default function ShowDetailScreen() {
                     <View style={styles.watchedIndicator}>
                       {episode.watched ? (
                         <AntDesign
-                          name="checkcircleo"
+                          name="checkcircle"
                           size={24}
                           color="#34C759"
                         />
                       ) : (
                         <AntDesign
-                          name="checkcircle"
+                          name="checkcircleo"
                           size={24}
                           color="#8E8E93"
                         />
