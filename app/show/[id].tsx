@@ -248,7 +248,9 @@ export default function ShowDetailScreen() {
         ]}
       >
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Loading episodes...</Text>
+        <Text style={[styles.loadingText, { color: colors.text }]}>
+          Loading episodes...
+        </Text>
       </View>
     );
   }
