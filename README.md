@@ -23,22 +23,27 @@ The app uses local SQLite storage to maintain your data without requiring a back
 
 ## Screenshots
 
-Shows can be followed and tracked in My Shows section:
+Search and follow your favorite shows:
 
 <img src="./docs/screenshots/1d.jpg" alt="my-shows" height="500">
 <img src="./docs/screenshots/1l.jpg" alt="my-shows" height="500">
 
-You can mark entire seasons as watched:
+Your shows can be tracked in My Shows section:
 
 <img src="./docs/screenshots/2d.jpg" alt="show-detail" height="500">
 <img src="./docs/screenshots/2l.jpg" alt="show-detail" height="500">
 
-You can spread out a season and mark individual episodes:
+You can mark entire seasons as watched...
 
 <img src="./docs/screenshots/3d.jpg" alt="episodes-detail" height="500">
 <img src="./docs/screenshots/3l.jpg" alt="episodes-detail" height="500">
 
-You can save your data as a JSON file and import it to another device:
+...Or spread out a season and mark individual episodes:
 
 <img src="./docs/screenshots/4d.jpg" alt="backup" height="500">
 <img src="./docs/screenshots/4l.jpg" alt="backup" height="500">
+
+You can save your data as a JSON file and import it to another device:
+
+<img src="./docs/screenshots/5d.jpg" alt="backup" height="500">
+<img src="./docs/screenshots/5l.jpg" alt="backup" height="500">
