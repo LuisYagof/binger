@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { initDatabase } from '@/lib/db';
+import { ThemeProvider, useTheme } from '@/styles/ThemeContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -24,18 +25,30 @@ export default function RootLayout() {
   }
 
   return (
-    <>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="show/[id]"
-          options={{
-            title: 'Show Details',
-            headerBackTitle: 'Back',
-          }}
-        />
-      </Stack>
+    <ThemeProvider>
+      <ThemedStack />
       <StatusBar style="auto" />
-    </>
+    </ThemeProvider>
+  );
+}
+
+function ThemedStack() {
+  const { colors } = useTheme();
+
+  return (
+    <Stack>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="show/[id]"
+        options={{
+          title: 'Show Details',
+          headerBackTitle: 'Back',
+          headerStyle: {
+            backgroundColor: colors.surface,
+          },
+          headerTintColor: colors.text,
+        }}
+      />
+    </Stack>
   );
 }

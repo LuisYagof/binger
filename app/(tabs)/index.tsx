@@ -11,11 +11,12 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { AntDesign } from '@expo/vector-icons';
 import { searchShows } from '@/lib/tmdb';
 import { followShow, initDatabase } from '@/lib/db';
-import { AntDesign } from '@expo/vector-icons';
 import { type TMDBShow } from '@/types/tmdb.types';
 import { type Show } from '@/types/db.types';
+import { useTheme } from '@/styles/ThemeContext';
 
 const convertToDbShow = (tmdbShow: TMDBShow): Show => {
   return {
@@ -33,6 +34,7 @@ export default function SearchScreen() {
   const [loading, setLoading] = useState(false);
   const [isDbInit, setIsDbInit] = useState(false);
   const router = useRouter();
+  const { colors } = useTheme();
 
   useEffect(() => {
     const setupDb = async () => {
@@ -98,11 +100,24 @@ export default function SearchScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.searchContainer}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View
+        style={[
+          styles.searchContainer,
+          { backgroundColor: colors.surface, borderBottomColor: colors.border },
+        ]}
+      >
         <TextInput
-          style={styles.searchInput}
+          style={[
+            styles.searchInput,
+            {
+              backgroundColor: colors.background,
+              borderColor: colors.border,
+              color: colors.text,
+            },
+          ]}
           placeholder="Search TV shows..."
+          placeholderTextColor={colors.textSecondary}
           value={query}
           onChangeText={setQuery}
           onSubmitEditing={handleSearch}
@@ -110,7 +125,10 @@ export default function SearchScreen() {
         />
         {query.length > 0 && (
           <TouchableOpacity
-            style={styles.clearButton}
+            style={[
+              styles.clearButton,
+              { backgroundColor: colors.textSecondary },
+            ]}
             onPress={() => setQuery('')}
           >
             <Text style={styles.clearButtonText}>✕</Text>
@@ -119,33 +137,66 @@ export default function SearchScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color={colors.primary} />
       ) : (
         <FlatList
           data={results}
           keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.listContent}
           renderItem={({ item }) => (
-            <View style={styles.showCard}>
+            <View
+              style={[
+                styles.showCard,
+                {
+                  backgroundColor: colors.surface,
+                  shadowColor: colors.text,
+                },
+              ]}
+            >
               <Image
-                source={{
-                  uri: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
-                }}
+                source={
+                  item.poster_path
+                    ? {
+                        uri: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
+                      }
+                    : require('@/assets/images/fallback.png')
+                }
                 style={styles.poster}
+                resizeMode="cover"
               />
               <View style={styles.showInfo}>
-                <Text style={styles.title}>{item.name}</Text>
-                <Text style={styles.date}>
+                <Text style={[styles.title, { color: colors.text }]}>
+                  {item.name}
+                </Text>
+                <Text style={[styles.date, { color: colors.textSecondary }]}>
                   First aired: {item.first_air_date}
                 </Text>
-                <Text numberOfLines={2} style={styles.overview}>
+                <Text
+                  numberOfLines={2}
+                  style={[styles.overview, { color: colors.text }]}
+                >
                   {item.overview}
                 </Text>
                 <TouchableOpacity
-                  style={styles.followButton}
+                  style={[
+                    styles.followButton,
+                    { backgroundColor: colors.primary },
+                  ]}
                   onPress={() => handleFollow(item)}
                 >
-                  <AntDesign name="pluscircleo" size={20} color="white" />
-                  <Text style={styles.followButtonText}>Follow Show</Text>
+                  <AntDesign
+                    name="pluscircleo"
+                    size={20}
+                    color={colors.buttonText}
+                  />
+                  <Text
+                    style={[
+                      styles.followButtonText,
+                      { color: colors.buttonText },
+                    ]}
+                  >
+                    Follow Show
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -159,20 +210,17 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   searchContainer: {
     padding: 16,
     backgroundColor: 'white',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
     position: 'relative',
     flexDirection: 'row',
     alignItems: 'center',
   },
   searchInput: {
     height: 40,
-    backgroundColor: '#f0f0f0',
     borderRadius: 8,
     paddingHorizontal: 16,
     fontSize: 16,
@@ -187,7 +235,6 @@ const styles = StyleSheet.create({
     height: 20,
     width: 20,
     borderRadius: 10,
-    backgroundColor: '#ccc',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -195,6 +242,9 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 12,
     fontWeight: 'bold',
+  },
+  listContent: {
+    paddingBottom: 20,
   },
   showCard: {
     flexDirection: 'row',
@@ -204,14 +254,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     elevation: 2,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    height: 160,
   },
   poster: {
-    width: 100,
-    height: 150,
+    width: '30%',
+    height: '100%',
   },
   showInfo: {
     flex: 1,
@@ -224,18 +274,15 @@ const styles = StyleSheet.create({
   },
   date: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 4,
   },
   overview: {
     fontSize: 14,
-    color: '#444',
     marginBottom: 8,
   },
   followButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#007AFF',
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 6,

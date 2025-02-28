@@ -14,12 +14,14 @@ import { getShowDetails, getShowSeasons } from '@/lib/tmdb';
 import { getShowEpisodes, addEpisode, markEpisodeAsWatched } from '@/lib/db';
 import { Episode } from '@/types/db.types';
 import { Season, ShowDetails } from '@/types/tmdb.types';
+import { useTheme } from '@/styles/ThemeContext';
 
 export default function ShowDetailScreen() {
   const { id } = useLocalSearchParams();
   const [show, setShow] = useState<ShowDetails | null>(null);
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [loading, setLoading] = useState(true);
+  const { colors } = useTheme();
 
   const loadShowData = async () => {
     try {
@@ -240,23 +242,35 @@ export default function ShowDetailScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Loading episodes...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {show && (
-        <View style={styles.headerContainer}>
-          <Text style={styles.showTitle}>{show.name}</Text>
-          <Text style={styles.showInfo}>
+        <View
+          style={[
+            styles.headerContainer,
+            {
+              backgroundColor: colors.surface,
+              shadowColor: colors.text,
+            },
+          ]}
+        >
+          <Text style={[styles.showTitle, { color: colors.text }]}>
+            {show.name}
+          </Text>
+          <Text style={[styles.showInfo, { color: colors.textSecondary }]}>
             {show.number_of_seasons} Season
             {show.number_of_seasons !== 1 ? 's' : ''} •{show.number_of_episodes}{' '}
             Episode{show.number_of_episodes !== 1 ? 's' : ''}
           </Text>
-          <Text style={styles.showOverview}>{show.overview}</Text>
+          <Text style={[styles.showOverview, { color: colors.text }]}>
+            {show.overview}
+          </Text>
         </View>
       )}
 
@@ -265,22 +279,38 @@ export default function ShowDetailScreen() {
         keyExtractor={(item) => `season-${item.season_number}`}
         contentContainerStyle={styles.listContent}
         renderItem={({ item: season }) => (
-          <View style={styles.seasonContainer}>
+          <View
+            style={[
+              styles.seasonContainer,
+              {
+                backgroundColor: colors.surface,
+                shadowColor: colors.text,
+              },
+            ]}
+          >
             {/* Season header with toggle */}
             <TouchableOpacity
-              style={styles.seasonHeader}
+              style={[
+                styles.seasonHeader,
+                { borderBottomColor: colors.border },
+              ]}
               onPress={() => toggleSeasonExpanded(season.season_number)}
             >
               {season.expanded ? (
-                <Entypo name="chevron-down" size={20} color="#007AFF" />
+                <Entypo name="chevron-down" size={20} color={colors.primary} />
               ) : (
-                <Entypo name="chevron-right" size={20} color="#007AFF" />
+                <Entypo name="chevron-right" size={20} color={colors.primary} />
               )}
-              <Text style={styles.seasonTitle}>{season.name}</Text>
+              <Text style={[styles.seasonTitle, { color: colors.text }]}>
+                {season.name}
+              </Text>
 
               {/* Mark all episodes button */}
               <TouchableOpacity
-                style={styles.markAllButton}
+                style={[
+                  styles.markAllButton,
+                  { backgroundColor: colors.border },
+                ]}
                 onPress={() =>
                   toggleAllEpisodesInSeason(
                     season.season_number,
@@ -288,17 +318,29 @@ export default function ShowDetailScreen() {
                   )
                 }
               >
-                <Text style={styles.markAllText}>
+                <Text style={[styles.markAllText, { color: colors.primary }]}>
                   {allEpisodesWatched(season.season_number)
                     ? 'Mark All Unwatched'
                     : 'Mark All Watched'}
                 </Text>
                 {allEpisodesWatched(season.season_number) ? (
-                  <AntDesign name="checkcircle" size={18} color="#34C759" />
+                  <AntDesign
+                    name="checkcircle"
+                    size={18}
+                    color={colors.tertiary}
+                  />
                 ) : anyEpisodesWatched(season.season_number) ? (
-                  <AntDesign name="checkcircleo" size={18} color="#8E8E93" />
+                  <AntDesign
+                    name="checkcircleo"
+                    size={18}
+                    color={colors.textSecondary}
+                  />
                 ) : (
-                  <AntDesign name="checkcircleo" size={18} color="#8E8E93" />
+                  <AntDesign
+                    name="checkcircleo"
+                    size={18}
+                    color={colors.textSecondary}
+                  />
                 )}
               </TouchableOpacity>
             </TouchableOpacity>
@@ -309,20 +351,33 @@ export default function ShowDetailScreen() {
                 {season.episodes.map((episode) => (
                   <TouchableOpacity
                     key={`episode-${episode.id}`}
-                    style={styles.episodeCard}
+                    style={[
+                      styles.episodeCard,
+                      { borderBottomColor: colors.border },
+                    ]}
                     onPress={() =>
                       toggleEpisodeWatched(episode.id, episode.watched)
                     }
                     activeOpacity={0.7}
                   >
                     <View style={styles.episodeInfo}>
-                      <Text style={styles.episodeTitle}>
+                      <Text
+                        style={[styles.episodeTitle, { color: colors.text }]}
+                      >
                         E{episode.episode_number}: {episode.name}
                       </Text>
-                      <Text style={styles.airDate}>
+                      <Text
+                        style={[
+                          styles.airDate,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
                         Aired: {episode.air_date || 'Unknown'}
                       </Text>
-                      <Text numberOfLines={2} style={styles.overview}>
+                      <Text
+                        numberOfLines={2}
+                        style={[styles.overview, { color: colors.text }]}
+                      >
                         {episode.overview || 'No description available'}
                       </Text>
                     </View>
@@ -331,13 +386,13 @@ export default function ShowDetailScreen() {
                         <AntDesign
                           name="checkcircle"
                           size={24}
-                          color="#34C759"
+                          color={colors.tertiary}
                         />
                       ) : (
                         <AntDesign
                           name="checkcircleo"
                           size={24}
-                          color="#8E8E93"
+                          color={colors.textSecondary}
                         />
                       )}
                     </View>
@@ -349,7 +404,9 @@ export default function ShowDetailScreen() {
         )}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No episodes found</Text>
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+              No episodes found
+            </Text>
           </View>
         }
       />
@@ -360,27 +417,22 @@ export default function ShowDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
   },
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: '#666',
   },
   headerContainer: {
     padding: 16,
-    backgroundColor: 'white',
     margin: 16,
     marginBottom: 6,
     borderRadius: 12,
     elevation: 2,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -392,12 +444,10 @@ const styles = StyleSheet.create({
   },
   showInfo: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 8,
   },
   showOverview: {
     fontSize: 14,
-    color: '#444',
     lineHeight: 20,
   },
   listContent: {
@@ -406,11 +456,9 @@ const styles = StyleSheet.create({
   seasonContainer: {
     marginHorizontal: 16,
     marginTop: 16,
-    backgroundColor: 'white',
     borderRadius: 12,
     overflow: 'hidden',
     elevation: 2,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -420,7 +468,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
   },
   seasonTitle: {
     fontSize: 18,
@@ -431,7 +478,6 @@ const styles = StyleSheet.create({
   markAllButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f0f0f0',
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 16,
@@ -439,7 +485,6 @@ const styles = StyleSheet.create({
   markAllText: {
     fontSize: 12,
     marginRight: 4,
-    color: '#007AFF',
   },
   episodesContainer: {
     padding: 8,
@@ -448,7 +493,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
   },
   episodeInfo: {
     flex: 1,
@@ -461,12 +505,10 @@ const styles = StyleSheet.create({
   },
   airDate: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 4,
   },
   overview: {
     fontSize: 14,
-    color: '#444',
   },
   watchedIndicator: {
     justifyContent: 'center',
@@ -477,7 +519,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#666',
     textAlign: 'center',
   },
 });

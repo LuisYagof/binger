@@ -19,12 +19,14 @@ import {
   testDatabase,
 } from '@/lib/db';
 import { type Show } from '@/types/db.types';
+import { useTheme } from '@/styles/ThemeContext';
 
 export default function MyShowsScreen() {
   const [shows, setShows] = useState<Show[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
+  const { colors } = useTheme();
 
   useEffect(() => {
     setup();
@@ -94,24 +96,28 @@ export default function MyShowsScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Loading your shows...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {shows.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
             You haven't followed any shows yet.
           </Text>
           <TouchableOpacity
-            style={styles.searchButton}
+            style={[styles.searchButton, { backgroundColor: colors.primary }]}
             onPress={() => router.push('/')}
           >
-            <Text style={styles.searchButtonText}>Search for Shows</Text>
+            <Text
+              style={[styles.searchButtonText, { color: colors.buttonText }]}
+            >
+              Search for Shows
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -121,7 +127,11 @@ export default function MyShowsScreen() {
             }}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <FontAwesome6 name="recycle" size={20} color="#bababa" />
+            <FontAwesome6
+              name="recycle"
+              size={20}
+              color={colors.textSecondary}
+            />
           </TouchableOpacity>
         </View>
       ) : (
@@ -132,32 +142,45 @@ export default function MyShowsScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              colors={['#007AFF']}
-              tintColor="#007AFF"
+              colors={[colors.primary]}
+              tintColor={colors.primary}
             />
           }
           contentContainerStyle={styles.listContent}
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={styles.showCard}
+              style={[
+                styles.showCard,
+                {
+                  backgroundColor: colors.surface,
+                  shadowColor: colors.text,
+                },
+              ]}
               onPress={() => router.push(`/show/${item.id}`)}
               activeOpacity={0.7}
             >
               <Image
-                source={{
-                  uri: item.poster_path
-                    ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
-                    : 'https://via.placeholder.com/100x150?text=No+Poster',
-                }}
+                source={
+                  item.poster_path
+                    ? {
+                        uri: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
+                      }
+                    : require('@/assets/images/fallback.png')
+                }
                 style={styles.poster}
-                // defaultSource={require('../assets/images/poster-placeholder.png')} // TODO: Add placeholder image
+                resizeMode="cover"
               />
               <View style={styles.showInfo}>
-                <Text style={styles.title}>{item.name}</Text>
-                <Text style={styles.date}>
+                <Text style={[styles.title, { color: colors.text }]}>
+                  {item.name}
+                </Text>
+                <Text style={[styles.date, { color: colors.textSecondary }]}>
                   First aired: {item.first_air_date || 'Unknown'}
                 </Text>
-                <Text numberOfLines={2} style={styles.overview}>
+                <Text
+                  numberOfLines={2}
+                  style={[styles.overview, { color: colors.text }]}
+                >
                   {item.overview || 'No overview available'}
                 </Text>
               </View>
@@ -166,7 +189,7 @@ export default function MyShowsScreen() {
                 onPress={() => handleUnfollow(item.id, item.name)}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <FontAwesome name="trash-o" size={20} color="#FF3B30" />
+                <FontAwesome name="trash-o" size={20} color={colors.error} />
               </TouchableOpacity>
             </TouchableOpacity>
           )}
@@ -179,18 +202,15 @@ export default function MyShowsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
   },
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: '#666',
   },
   emptyContainer: {
     flex: 1,
@@ -200,18 +220,15 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#666',
     marginBottom: 20,
     textAlign: 'center',
   },
   searchButton: {
-    backgroundColor: '#007AFF',
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
   },
   searchButtonText: {
-    color: 'white',
     fontWeight: '600',
     fontSize: 16,
   },
@@ -220,21 +237,19 @@ const styles = StyleSheet.create({
   },
   showCard: {
     flexDirection: 'row',
-    backgroundColor: 'white',
     marginHorizontal: 16,
     marginTop: 16,
     borderRadius: 12,
     overflow: 'hidden',
     elevation: 2,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    height: 160,
   },
   poster: {
-    width: 100,
-    height: 150,
-    backgroundColor: '#e1e1e1',
+    width: '30%',
+    height: '100%',
   },
   showInfo: {
     flex: 1,
@@ -247,12 +262,10 @@ const styles = StyleSheet.create({
   },
   date: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 4,
   },
   overview: {
     fontSize: 14,
-    color: '#444',
   },
   unfollowButton: {
     padding: 12,

@@ -1,13 +1,23 @@
+import { AntDesign, Entypo, Feather } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import { AntDesign, Feather, Entypo } from '@expo/vector-icons';
+import { useTheme } from '@/styles/ThemeContext';
 
 export default function TabLayout() {
+  const { colors } = useTheme();
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: '#8E8E93',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
         headerShown: true,
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+        },
+        headerStyle: {
+          backgroundColor: colors.surface,
+        },
+        headerTintColor: colors.text,
       }}
     >
       <Tabs.Screen
