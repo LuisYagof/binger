@@ -12,8 +12,8 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AntDesign } from '@expo/vector-icons';
-import { searchShows } from '@/lib/tmdb';
-import { followShow, initDatabase } from '@/lib/db';
+import { searchShows } from '@/api/tmdb';
+import { followShow, initDatabase } from '@/db/db';
 import { type TMDBShow } from '@/types/tmdb.types';
 import { type Show } from '@/types/db.types';
 import { useTheme } from '@/styles/ThemeContext';

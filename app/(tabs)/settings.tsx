@@ -9,7 +9,7 @@ import {
   Switch,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { exportData, importData } from '@/lib/db-backup';
+import { exportData, importData } from '@/db/db-backup';
 import { useTheme } from '@/styles/ThemeContext';
 
 export default function SettingsScreen() {

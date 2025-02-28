@@ -1,7 +1,7 @@
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
-import { addEpisode, followShow, getFollowedShows, getShowEpisodes } from '@/lib/db';
+import { addEpisode, followShow, getFollowedShows, getShowEpisodes } from '@/db/db';
 
 export const exportData = async () => {
     try {

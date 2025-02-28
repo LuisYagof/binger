@@ -35,7 +35,7 @@ yarn-error.*
 
 # api keys
 # TODO: uncomment android for eas preview
-lib/tmdb-key.ts
+api/tmdb-key.ts
 
 # misc
 drafts/
@@ -45,3 +45,6 @@ build/
 dist/
 android/
 credentials.json
+
+# vscode
+.vscode/settings.json

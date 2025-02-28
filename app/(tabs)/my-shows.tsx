@@ -17,7 +17,7 @@ import {
   unfollowShow,
   initDatabase,
   testDatabase,
-} from '@/lib/db';
+} from '@/db/db';
 import { type Show } from '@/types/db.types';
 import { useTheme } from '@/styles/ThemeContext';
 

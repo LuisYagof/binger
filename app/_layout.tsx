@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { initDatabase } from '@/lib/db';
+import { initDatabase } from '@/db/db';
 import { ThemeProvider, useTheme } from '@/styles/ThemeContext';
 
 SplashScreen.preventAutoHideAsync();

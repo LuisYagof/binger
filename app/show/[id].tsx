@@ -10,8 +10,8 @@ import {
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { AntDesign, Entypo } from '@expo/vector-icons';
-import { getShowDetails, getShowSeasons } from '@/lib/tmdb';
-import { getShowEpisodes, addEpisode, markEpisodeAsWatched } from '@/lib/db';
+import { getShowDetails, getShowSeasons } from '@/api/tmdb';
+import { getShowEpisodes, addEpisode, markEpisodeAsWatched } from '@/db/db';
 import { Episode } from '@/types/db.types';
 import { Season, ShowDetails } from '@/types/tmdb.types';
 import { useTheme } from '@/styles/ThemeContext';

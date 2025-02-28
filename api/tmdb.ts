@@ -1,5 +1,6 @@
-import { API_KEY } from '@/lib/tmdb-key';
+import { API_KEY } from '@/api/tmdb-key';
 import { type ShowDetails } from '@/types/tmdb.types';
+
 const BASE_URL = 'https://api.themoviedb.org/3';
 
 export const searchShows = async (query: string) => {
