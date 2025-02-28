@@ -111,6 +111,7 @@ const styles = StyleSheet.create({
   },
   spinner: {
     paddingTop: 40,
+    paddingBottom: 40,
   },
   section: {
     marginTop: 20,
