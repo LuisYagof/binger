@@ -6,9 +6,9 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  SectionList,
+  Alert,
 } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { AntDesign, Entypo } from '@expo/vector-icons';
 import { getShowDetails, getShowSeasons } from '@/api/tmdb';
 import { getShowEpisodes, addEpisode, markEpisodeAsWatched } from '@/db/db';
@@ -136,8 +136,21 @@ export default function ShowDetailScreen() {
           newSeasons.sort((a, b) => a.season_number - b.season_number)
         );
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading show data:', error);
+      if ('type' in error && error.type === 'API') {
+        Alert.alert('API Error', 'TMDB API key missing', [
+          {
+            text: 'Go to settings',
+            onPress: () => router.navigate('/settings'),
+          },
+        ]);
+      } else {
+        Alert.alert(
+          'Error loading show data',
+          'An error occurred while fetching show data. Please try again.'
+        );
+      }
     } finally {
       setLoading(false);
     }

@@ -34,7 +34,6 @@ yarn-error.*
 *.tsbuildinfo
 
 # api keys
-# TODO: uncomment android for eas preview
 api/tmdb-key.ts
 
 # misc

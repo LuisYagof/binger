@@ -16,6 +16,8 @@ export const initDatabase = async (): Promise<void> => {
 
 const createTablesIfNeeded = async (): Promise<void> => {
     try {
+        db.execSync(`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)`);
+
         db.execSync(`
       CREATE TABLE IF NOT EXISTS shows (
         id INTEGER PRIMARY KEY NOT NULL,
@@ -44,6 +46,39 @@ const createTablesIfNeeded = async (): Promise<void> => {
     } catch (error) {
         console.error("Error creating tables:", error);
         return Promise.reject(error);
+    }
+};
+
+export const saveApiKeyToDb = async (key: string): Promise<void> => {
+    if (!db) await initDatabase();
+    const statement = db.prepareSync(`INSERT OR REPLACE INTO settings (key, value) VALUES ('api_key', '${key}')`);
+    try {
+        statement.executeSync();
+        return Promise.resolve();
+    } catch (error) {
+        console.error("Error saving API key:", error);
+        return Promise.reject(error);
+    } finally {
+        if (statement) statement.finalizeSync();
+    }
+};
+
+export const getApiKeyFromDb = async (): Promise<string | null> => {
+    if (!db) await initDatabase();
+    const statement = db.prepareSync(`SELECT value FROM settings WHERE key = 'api_key'`);
+    try {
+        const result = statement.executeSync();
+        const rows = result.getAllSync() as { value: string }[];
+        if (rows.length > 0 && 'value' in rows[0]) {
+            return rows[0].value;
+        } else {
+            return null;
+        }
+    } catch (error) {
+        console.error("Error getting API key:", error);
+        return null;
+    } finally {
+        if (statement) statement.finalizeSync();
     }
 };
 

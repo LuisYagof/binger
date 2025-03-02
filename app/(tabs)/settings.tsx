@@ -6,29 +6,23 @@ import {
   TouchableOpacity,
   Linking,
   ActivityIndicator,
-  Switch,
+  ScrollView,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { exportData, importData } from '@/db/db-backup';
 import { useTheme } from '@/styles/ThemeContext';
+import { settingsStyles } from '@/styles/settings.styles';
+import ApiKeySection from '@/components/settings/api-key.section';
+import ThemeSwitchSection from '@/components/settings/theme-switch.section';
+import DataBackupSection from '@/components/settings/data-backup.section';
 
 export default function SettingsScreen() {
   const [loading, setLoading] = useState(false);
-  const { theme, setTheme, colors } = useTheme();
-  const isDarkMode = theme === 'dark';
-
-  function toggleTheme() {
-    setTheme(isDarkMode ? 'light' : 'dark');
-  }
-
-  async function handleImportData() {
-    setLoading(true);
-    await importData();
-    setLoading(false);
-  }
+  const { colors } = useTheme();
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
       {loading ? (
         <ActivityIndicator
           size="large"
@@ -37,17 +31,27 @@ export default function SettingsScreen() {
         />
       ) : (
         <>
-          <View style={[styles.section, { backgroundColor: colors.surface }]}>
+          <View
+            style={[
+              settingsStyles.section,
+              { backgroundColor: colors.surface },
+            ]}
+          >
             <Text
-              style={[styles.sectionTitle, { color: colors.textSecondary }]}
+              style={[
+                settingsStyles.sectionTitle,
+                { color: colors.textSecondary },
+              ]}
             >
               About
             </Text>
             <TouchableOpacity
-              style={styles.link}
+              style={settingsStyles.link}
               onPress={() => Linking.openURL('https://www.themoviedb.org/')}
             >
-              <Text style={[styles.linkText, { color: colors.primary }]}>
+              <Text
+                style={[settingsStyles.linkText, { color: colors.primary }]}
+              >
                 Powered by TMDB
               </Text>
               <Feather
@@ -59,49 +63,14 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={[styles.section, { backgroundColor: colors.surface }]}>
-            <Text
-              style={[styles.sectionTitle, { color: colors.textSecondary }]}
-            >
-              Backup
-            </Text>
-            <TouchableOpacity style={styles.link} onPress={() => exportData()}>
-              <Text style={[styles.linkText, { color: colors.primary }]}>
-                Export data
-              </Text>
-            </TouchableOpacity>
+          <DataBackupSection loading={loading} setLoading={setLoading} />
 
-            <TouchableOpacity
-              style={styles.link}
-              onPress={() => handleImportData()}
-            >
-              <Text style={[styles.linkText, { color: colors.primary }]}>
-                Import data
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <ThemeSwitchSection />
+
+          <ApiKeySection />
         </>
       )}
-
-      <View style={[styles.section, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
-          Appearance
-        </Text>
-
-        <View style={styles.optionRow}>
-          <Text style={[styles.optionText, { color: colors.text }]}>
-            Dark Mode
-          </Text>
-          <Switch
-            trackColor={{ false: '#767577', true: colors.primary }}
-            thumbColor="#f4f3f4"
-            ios_backgroundColor="#3e3e3e"
-            onValueChange={toggleTheme}
-            value={isDarkMode}
-          />
-        </View>
-      </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -112,32 +81,5 @@ const styles = StyleSheet.create({
   spinner: {
     paddingTop: 40,
     paddingBottom: 40,
-  },
-  section: {
-    marginTop: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  link: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  linkText: {
-    fontSize: 16,
-    marginRight: 8,
-  },
-  optionText: {
-    fontSize: 16,
-  },
-  optionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
   },
 });

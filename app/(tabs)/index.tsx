@@ -62,12 +62,21 @@ export default function SearchScreen() {
       const shows = await searchShows(query);
       setResults(shows);
       console.log(`Found ${shows.length} shows for query: ${query}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Search error:', error);
-      Alert.alert(
-        'Search Error',
-        'Failed to search for shows. Please try again.'
-      );
+      if ('type' in error && error.type === 'API') {
+        Alert.alert('API Error', 'TMDB API key missing', [
+          {
+            text: 'Go to settings',
+            onPress: () => router.navigate('/settings'),
+          },
+        ]);
+      } else {
+        Alert.alert(
+          'Search Error',
+          'An error occurred while searching for shows. Please try again.'
+        );
+      }
     } finally {
       setLoading(false);
     }
