@@ -6,6 +6,13 @@ export interface Show {
     first_air_date: string;
 }
 
+export interface Season {
+    season_number: number;
+    name: string;
+    expanded: boolean;
+    episodes: Episode[];
+}
+
 export interface Episode {
     id: number;
     show_id: number;

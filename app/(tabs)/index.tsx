@@ -59,24 +59,23 @@ export default function SearchScreen() {
 
     setLoading(true);
     try {
-      const shows = await searchShows(query);
-      setResults(shows);
-      console.log(`Found ${shows.length} shows for query: ${query}`);
-    } catch (error: any) {
-      console.error('Search error:', error);
-      if ('type' in error && error.type === 'API') {
-        Alert.alert('API Error', 'TMDB API key missing', [
-          {
-            text: 'Go to settings',
-            onPress: () => router.navigate('/settings'),
-          },
-        ]);
+      const result = await searchShows(query);
+
+      if (result.error) {
+        Alert.alert('Error', result.error.message);
+        setResults([]);
       } else {
-        Alert.alert(
-          'Search Error',
-          'An error occurred while searching for shows. Please try again.'
+        setResults(result.data || []);
+        console.log(
+          `Found ${result.data?.length || 0} shows for query: ${query}`
         );
       }
+    } catch (error: any) {
+      console.error('Search error:', error);
+      Alert.alert(
+        'Search Error',
+        'An error occurred while searching for shows. Check your API key in settings and try again.'
+      );
     } finally {
       setLoading(false);
     }
@@ -146,7 +145,11 @@ export default function SearchScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator
+          size="large"
+          color={colors.primary}
+          style={{ paddingTop: 40, paddingBottom: 40 }}
+        />
       ) : (
         <FlatList
           data={results}

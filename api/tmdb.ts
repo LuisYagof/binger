@@ -1,51 +1,31 @@
-import { type ShowDetails } from '@/types/tmdb.types';
-import { getApiKeyFromDb } from '@/db/db';
+import { apiRequest, Result } from "@/api/http.utils";
+import { SeasonDetails, TMDBSearchResult, TMDBShow, TMDBShowDetailsResult } from "@/types/tmdb.types";
 
 const BASE_URL = 'https://api.themoviedb.org/3';
 
-const getValidApiKey = async (): Promise<string | null> => {
-  try {
-    const apikey = await getApiKeyFromDb();
-    if (!apikey) {
-      return null
-    }
-    return await getApiKeyFromDb();
-  } catch (error) {
-    console.error('Error getting API key:', error);
-    return null
+export const searchShows = async (query: string): Promise<Result<TMDBShow[]>> => {
+  const result = await apiRequest<TMDBSearchResult>(
+    `${BASE_URL}/search/tv?query=${encodeURIComponent(query)}`, true
+  );
+
+  if (result.error) return { data: null, error: result.error };
+  if (!result.data?.results) {
+    return {
+      data: null,
+      error: {
+        type: 'UNKNOWN',
+        message: 'Invalid response format from TMDB'
+      }
+    };
   }
+
+  return { data: result.data.results, error: null };
 };
 
-export const searchShows = async (query: string) => {
-  const API_KEY = await getValidApiKey();
-  if (!API_KEY) {
-    return Promise.reject({ type: 'API', message: 'No API key found' });
-  }
-  const response = await fetch(
-    `${BASE_URL}/search/tv?api_key=${API_KEY}&query=${encodeURIComponent(query)}`
-  );
-  const data = await response.json();
-  return data.results;
+export const getShowDetails = async (showId: number): Promise<Result<TMDBShowDetailsResult>> => {
+  return await apiRequest<TMDBShowDetailsResult>(`${BASE_URL}/tv/${showId}`);
 };
 
-export const getShowDetails = async (showId: number): Promise<ShowDetails> => {
-  const API_KEY = await getValidApiKey();
-  if (!API_KEY) {
-    return Promise.reject({ type: 'API', message: 'No API key found' });
-  }
-  const response = await fetch(
-    `${BASE_URL}/tv/${showId}?api_key=${API_KEY}`
-  );
-  return await response.json();
-};
-
-export const getShowSeasons = async (showId: number, seasonNumber: number) => {
-  const API_KEY = await getValidApiKey();
-  if (!API_KEY) {
-    return Promise.reject({ type: 'API', message: 'No API key found' });
-  }
-  const response = await fetch(
-    `${BASE_URL}/tv/${showId}/season/${seasonNumber}?api_key=${API_KEY}`
-  );
-  return await response.json();
+export const getShowSeasons = async (showId: number, seasonNumber: number): Promise<Result<SeasonDetails>> => {
+  return await apiRequest<SeasonDetails>(`${BASE_URL}/tv/${showId}/season/${seasonNumber}`);
 };

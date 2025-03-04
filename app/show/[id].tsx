@@ -12,145 +12,138 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { AntDesign, Entypo } from '@expo/vector-icons';
 import { getShowDetails, getShowSeasons } from '@/api/tmdb';
 import { getShowEpisodes, addEpisode, markEpisodeAsWatched } from '@/db/db';
-import { Episode } from '@/types/db.types';
-import { Season, ShowDetails } from '@/types/tmdb.types';
+import { Episode, Season } from '@/types/db.types';
+import { EpisodeDetails, TMDBShowDetailsResult } from '@/types/tmdb.types';
 import { useTheme } from '@/styles/ThemeContext';
 
 export default function ShowDetailScreen() {
   const { id } = useLocalSearchParams();
-  const [show, setShow] = useState<ShowDetails | null>(null);
+  const [show, setShow] = useState<TMDBShowDetailsResult | null>(null);
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [loading, setLoading] = useState(true);
   const { colors } = useTheme();
 
+  const getLocalEpisodes = async (showId: number) => {
+    const episodes = await getShowEpisodes(showId);
+    console.log(
+      `Retrieved ${episodes.length} local episodes for show ${showId}`
+    );
+    return episodes;
+  };
+
+  const createEpisodesMap = (episodes: Episode[]) => {
+    return new Map(episodes.map((episode) => [episode.id, episode]));
+  };
+
+  const convertApiEpisodeToDbFormat = (
+    episode: EpisodeDetails,
+    showId: number,
+    isWatched: boolean
+  ): Episode => {
+    return {
+      id: episode.id,
+      show_id: showId,
+      season_number: episode.season_number,
+      episode_number: episode.episode_number,
+      name: episode.name,
+      overview: episode.overview || '',
+      air_date: episode.air_date || '',
+      watched: isWatched,
+    };
+  };
+
+  const organizeEpisodesBySeason = (episodes: Episode[]): Season[] => {
+    const seasonMap = new Map<number, Episode[]>();
+
+    episodes.forEach((episode) => {
+      if (!seasonMap.has(episode.season_number)) {
+        seasonMap.set(episode.season_number, []);
+      }
+      seasonMap.get(episode.season_number)?.push(episode);
+    });
+
+    const seasons: Season[] = [];
+    seasonMap.forEach((episodes, seasonNumber) => {
+      seasons.push({
+        season_number: seasonNumber,
+        name: `Season ${seasonNumber}`,
+        expanded: false,
+        episodes: episodes.sort((a, b) => a.episode_number - b.episode_number),
+      });
+    });
+
+    return seasons.sort((a, b) => a.season_number - b.season_number);
+  };
+
   const loadShowData = async () => {
+    setLoading(true);
+
     try {
-      const showDetails = await getShowDetails(Number(id));
+      // 1. Get show details
+      const result = await getShowDetails(Number(id));
+      if (result.error) {
+        Alert.alert('Error', result.error.message);
+        setShow(null);
+        return;
+      }
+
+      const showDetails = result.data;
+      if (!showDetails) return;
+
       setShow(showDetails);
 
-      // First, get local episodes to ensure we have the correct watched status
-      const localEpisodes = await getShowEpisodes(Number(id));
-      console.log(
-        `Retrieved ${localEpisodes.length} local episodes for show ${id}`
-      );
+      // 2. Get local episodes
+      const localEpisodes = await getLocalEpisodes(Number(id));
+      const localEpisodesMap = createEpisodesMap(localEpisodes);
 
-      // Create a map of local episodes for quick lookup
-      const localEpisodesMap = new Map(
-        localEpisodes.map((episode) => [episode.id, episode])
-      );
-
-      // Only fetch remote data if we don't have episodes locally or if there are new seasons
+      // 3. Determine if we need to fetch remote data
       if (localEpisodes.length === 0 || showDetails.number_of_seasons > 0) {
         console.log(
           `Fetching ${showDetails.number_of_seasons} seasons from TMDB API`
         );
 
-        // Load all seasons from the API
-        const seasonsData = await Promise.all(
-          Array.from({ length: showDetails.number_of_seasons }, (_, i) =>
-            getShowSeasons(Number(id), i + 1)
-          )
+        // 4. Fetch remote seasons data
+        const seasonPromises = Array.from(
+          { length: showDetails.number_of_seasons },
+          (_, i) => getShowSeasons(Number(id), i + 1)
         );
 
-        // Combine and format episodes data
-        const remoteEpisodes = seasonsData.flatMap((season: Season) =>
-          season.episodes.map((episode) => {
-            // If we already have this episode locally, use its watched status
-            const localEpisode = localEpisodesMap.get(episode.id);
-            return {
-              id: episode.id,
-              show_id: Number(id),
-              season_number: episode.season_number,
-              episode_number: episode.episode_number,
-              name: episode.name,
-              overview: episode.overview || '',
-              air_date: episode.air_date || '',
-              watched: localEpisode ? localEpisode.watched : false,
-            };
-          })
-        );
+        const seasonsResults = await Promise.all(seasonPromises);
 
-        // Save or update all episodes to the local database
+        // 5. Process episodes from all seasons
+        const remoteEpisodes: Episode[] = [];
+        seasonsResults.forEach((seasonResult) => {
+          if (seasonResult.data?.episodes) {
+            seasonResult.data.episodes.forEach((apiEpisode) => {
+              const localEpisode = localEpisodesMap.get(apiEpisode.id);
+              const episode = convertApiEpisodeToDbFormat(
+                apiEpisode,
+                Number(id),
+                !!localEpisode?.watched
+              );
+              remoteEpisodes.push(episode);
+            });
+          }
+        });
+
+        // 6. Save episodes to database
         console.log(`Saving ${remoteEpisodes.length} episodes to database`);
-
         for (const episode of remoteEpisodes) {
           await addEpisode(episode);
         }
 
-        // Organize episodes by season
-        const seasonMap = new Map<number, Episode[]>();
-        remoteEpisodes.forEach((episode: Episode) => {
-          if (!seasonMap.has(episode.season_number)) {
-            seasonMap.set(episode.season_number, []);
-          }
-          const episodes = seasonMap.get(episode.season_number);
-          if (episodes) {
-            episodes.push(episode);
-          }
-        });
-
-        // Create seasons array for our UI
-        const newSeasons: Season[] = [];
-        seasonMap.forEach((episodes, seasonNumber) => {
-          newSeasons.push({
-            season_number: seasonNumber,
-            name: `Season ${seasonNumber}`,
-            expanded: false, // All seasons collapsed by default
-            episodes: episodes.sort(
-              (a, b) => a.episode_number - b.episode_number
-            ),
-          });
-        });
-
-        setSeasons(
-          newSeasons.sort((a, b) => a.season_number - b.season_number)
-        );
+        // 7. Organize episodes by season
+        setSeasons(organizeEpisodesBySeason(remoteEpisodes));
       } else {
-        // Just use the local episodes if we already have them
-        // Organize episodes by season
-        const seasonMap = new Map<number, Episode[]>();
-        localEpisodes.forEach((episode) => {
-          if (!seasonMap.has(episode.season_number)) {
-            seasonMap.set(episode.season_number, []);
-          }
-          const episodes = seasonMap.get(episode.season_number);
-          if (episodes) {
-            episodes.push(episode);
-          }
-        });
-
-        // Create seasons array for our UI
-        const newSeasons: Season[] = [];
-        seasonMap.forEach((episodes, seasonNumber) => {
-          newSeasons.push({
-            season_number: seasonNumber,
-            name: `Season ${seasonNumber}`,
-            expanded: false, // All seasons collapsed by default
-            episodes: episodes.sort(
-              (a, b) => a.episode_number - b.episode_number
-            ),
-          });
-        });
-
-        setSeasons(
-          newSeasons.sort((a, b) => a.season_number - b.season_number)
-        );
+        // 8. Just use local episodes if we already have them
+        setSeasons(organizeEpisodesBySeason(localEpisodes));
       }
     } catch (error: any) {
       console.error('Error loading show data:', error);
-      if ('type' in error && error.type === 'API') {
-        Alert.alert('API Error', 'TMDB API key missing', [
-          {
-            text: 'Go to settings',
-            onPress: () => router.navigate('/settings'),
-          },
-        ]);
-      } else {
-        Alert.alert(
-          'Error loading show data',
-          'An error occurred while fetching show data. Please try again.'
-        );
-      }
+      Alert.alert(
+        'Error loading show data',
+        'An error occurred while fetching show data. Check your API key in settings and try again.'
+      );
     } finally {
       setLoading(false);
     }
