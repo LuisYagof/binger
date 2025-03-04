@@ -10,14 +10,9 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { FontAwesome, FontAwesome6 } from '@expo/vector-icons';
-import {
-  getFollowedShows,
-  unfollowShow,
-  initDatabase,
-  testDatabase,
-} from '@/db/db';
+import { getFollowedShows, unfollowShow } from '@/db/db';
 import { type Show } from '@/types/db.types';
 import { useTheme } from '@/styles/ThemeContext';
 
@@ -28,20 +23,11 @@ export default function MyShowsScreen() {
   const router = useRouter();
   const { colors } = useTheme();
 
-  useEffect(() => {
-    setup();
-  }, []);
-
-  const setup = async () => {
-    try {
-      await initDatabase();
-      await loadShows();
-    } catch (error) {
-      console.error('Error setting up database:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useFocusEffect(
+    useCallback(() => {
+      loadShows();
+    }, [])
+  );
 
   const loadShows = async () => {
     try {
@@ -55,6 +41,8 @@ export default function MyShowsScreen() {
         'Error',
         'Failed to load shows. Pull down to refresh and try again.'
       );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -95,9 +83,16 @@ export default function MyShowsScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View
+        style={[
+          styles.loadingContainer,
+          { backgroundColor: colors.background },
+        ]}
+      >
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Loading your shows...</Text>
+        <Text style={[styles.loadingText, { color: colors.text }]}>
+          Loading your shows...
+        </Text>
       </View>
     );
   }
@@ -269,7 +264,7 @@ const styles = StyleSheet.create({
   },
   unfollowButton: {
     padding: 12,
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
   },
   refreshButton: {
     padding: 12,
