@@ -11,7 +11,12 @@ import {
 import { router, useLocalSearchParams } from 'expo-router';
 import { AntDesign, Entypo } from '@expo/vector-icons';
 import { getShowDetails, getShowSeasons } from '@/api/tmdb';
-import { getShowEpisodes, addEpisode, markEpisodeAsWatched } from '@/db/db';
+import {
+  getShowEpisodes,
+  addEpisode,
+  markEpisodeAsWatched,
+  updateShowStatus,
+} from '@/db/db';
 import { Episode, Season } from '@/types/db.types';
 import { EpisodeDetails, TMDBShowDetailsResult } from '@/types/tmdb.types';
 import { useTheme } from '@/styles/ThemeContext';
@@ -91,6 +96,10 @@ export default function ShowDetailScreen() {
       if (!showDetails) return;
 
       setShow(showDetails);
+      await updateShowStatus(
+        Number(id),
+        showDetails.last_episode_to_air?.air_date || showDetails.last_air_date
+      );
 
       // 2. Get local episodes
       const localEpisodes = await getLocalEpisodes(Number(id));
@@ -161,11 +170,12 @@ export default function ShowDetailScreen() {
 
   const toggleEpisodeWatched = async (episodeId: number, watched: boolean) => {
     try {
-      // Toggle the watched status in the database
-      console.log(
-        `Toggling episode ${episodeId} to ${!watched ? 'watched' : 'unwatched'}`
-      );
       await markEpisodeAsWatched(episodeId, !watched);
+      if (show)
+        await updateShowStatus(
+          Number(id),
+          show.last_episode_to_air?.air_date || show.last_air_date
+        );
 
       // Update the local state to reflect the change in UI
       setSeasons((prevSeasons) =>

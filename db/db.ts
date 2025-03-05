@@ -42,6 +42,15 @@ const createTablesIfNeeded = async (): Promise<void> => {
       );
     `);
 
+        db.execSync(`
+        CREATE TABLE IF NOT EXISTS show_status (
+          show_id INTEGER PRIMARY KEY,
+          last_check_date TEXT,
+          has_pending_episodes INTEGER DEFAULT 0,
+          last_aired_episode_date TEXT
+        )
+      `);
+
         return Promise.resolve();
     } catch (error) {
         console.error("Error creating tables:", error);
@@ -83,9 +92,7 @@ export const getApiKeyFromDb = async (): Promise<string | null> => {
 };
 
 export const followShow = async (show: Show): Promise<void> => {
-    if (!db) {
-        await initDatabase();
-    }
+    if (!db) await initDatabase();
 
     try {
         const statement = db.prepareSync(
@@ -111,9 +118,7 @@ export const followShow = async (show: Show): Promise<void> => {
 };
 
 export const unfollowShow = async (showId: number): Promise<void> => {
-    if (!db) {
-        await initDatabase();
-    }
+    if (!db) await initDatabase();
 
     try {
         const deleteEpisodesStmt = db.prepareSync('DELETE FROM episodes WHERE show_id = ?');
@@ -132,53 +137,69 @@ export const unfollowShow = async (showId: number): Promise<void> => {
     }
 };
 
+// TODO: Now replaced by getFollowedShowsWithStatus
 export const getFollowedShows = async (): Promise<Show[]> => {
-    if (!db) {
-        await initDatabase();
-    }
+    if (!db) await initDatabase();
+    const statement = db.prepareSync('SELECT * FROM shows ORDER BY name');
 
     try {
-        const statement = db.prepareSync('SELECT * FROM shows ORDER BY name');
         const result = statement.executeSync();
-
         const shows: Show[] = [];
+        const rows = result.getAllSync() as Show[];
 
-        try {
-            const rows = result.getAllSync() as Show[];
-            console.log("Raw rows data:", rows);
-
-            if (rows && Array.isArray(rows)) {
-                for (let i = 0; i < rows.length; i++) {
-                    const row = rows[i];
-                    shows.push({
-                        id: Number(row.id),
-                        name: String(row.name || ''),
-                        overview: String(row.overview || ''),
-                        poster_path: String(row.poster_path || ''),
-                        first_air_date: String(row.first_air_date || '')
-                    });
-                }
+        if (rows && Array.isArray(rows)) {
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                shows.push({
+                    id: Number(row.id),
+                    name: String(row.name || ''),
+                    overview: String(row.overview || ''),
+                    poster_path: String(row.poster_path || ''),
+                    first_air_date: String(row.first_air_date || '')
+                });
             }
-        } catch (getAllError) {
-            console.error("Error getting rows:", getAllError);
         }
-
-        statement.finalizeSync();
-
         console.log(`Retrieved ${shows.length} shows`);
         return Promise.resolve(shows);
     } catch (error) {
         console.error("SQL Error in getFollowedShows:", error);
         return Promise.reject(error);
     }
+    finally {
+        if (statement) statement.finalizeSync();
+    }
 };
 
+export const getFollowedShowsWithStatus = async (): Promise<(Show & { hasPending: boolean })[]> => {
+    if (!db) await initDatabase();
 
+    try {
+        const statement = db.prepareSync(`
+        SELECT s.*, COALESCE(ss.has_pending_episodes, 0) as has_pending 
+        FROM shows s 
+        LEFT JOIN show_status ss ON s.id = ss.show_id
+        ORDER BY s.name
+      `);
+        const result = statement.executeSync();
+        const rows = result.getAllSync() as any[];
+        statement.finalizeSync();
+
+        return rows.map(row => ({
+            id: Number(row.id),
+            name: String(row.name || ''),
+            overview: String(row.overview || ''),
+            poster_path: String(row.poster_path || ''),
+            first_air_date: String(row.first_air_date || ''),
+            hasPending: Boolean(row.has_pending)
+        }));
+    } catch (error) {
+        console.error("Error getting shows with status:", error);
+        return [];
+    }
+};
 
 export const markEpisodeAsWatched = async (episodeId: number, watched: boolean): Promise<void> => {
-    if (!db) {
-        await initDatabase();
-    }
+    if (!db) await initDatabase();
 
     try {
         const statement = db.prepareSync('UPDATE episodes SET watched = ? WHERE id = ?');
@@ -194,9 +215,7 @@ export const markEpisodeAsWatched = async (episodeId: number, watched: boolean):
 };
 
 export const addEpisode = async (episode: Episode): Promise<void> => {
-    if (!db) {
-        await initDatabase();
-    }
+    if (!db) await initDatabase();
 
     try {
         const statement = db.prepareSync(`
@@ -227,9 +246,7 @@ export const addEpisode = async (episode: Episode): Promise<void> => {
 };
 
 export const getShowEpisodes = async (showId: number): Promise<Episode[]> => {
-    if (!db) {
-        await initDatabase();
-    }
+    if (!db) await initDatabase();
 
     try {
         const statement = db.prepareSync(`SELECT * FROM episodes WHERE show_id = ${showId} ORDER BY season_number, episode_number`);
@@ -237,7 +254,6 @@ export const getShowEpisodes = async (showId: number): Promise<Episode[]> => {
 
         const episodes: Episode[] = [];
         const rows = result.getAllSync() as Episode[];
-        console.log("Raw rows data:", rows);
 
         if (rows && Array.isArray(rows) && rows.length > 0) {
             for (const row of rows) {
@@ -263,36 +279,34 @@ export const getShowEpisodes = async (showId: number): Promise<Episode[]> => {
     }
 };
 
-export const testDatabase = async (): Promise<string> => {
+export const updateShowStatus = async (showId: number, lastAiredDate: string): Promise<void> => {
+    if (!db) await initDatabase();
+
     try {
-        await initDatabase();
+        const statement = db.prepareSync(`SELECT * FROM episodes WHERE show_id = ? ORDER BY air_date DESC`);
+        const result = statement.executeSync([showId]);
+        const episodes = result.getAllSync() as any[];
+        statement.finalizeSync();
 
-        console.log("Running database test...");
+        let hasPendingEpisodes = 0;
+        if (episodes.length > 0) {
+            const unwatchedAired = episodes.some(ep =>
+                !ep.watched &&
+                ep.air_date &&
+                new Date(ep.air_date) <= new Date()
+            );
+            hasPendingEpisodes = unwatchedAired ? 1 : 0;
+        }
 
-        const testShow: Show = {
-            id: 999999,
-            name: "Test Show",
-            overview: "This is a test",
-            poster_path: "/test.jpg",
-            first_air_date: "2025-01-01"
-        };
-
-        await followShow(testShow);
-        console.log("Successfully saved test show");
-
-        const shows = await getFollowedShows();
-        console.log("Test - Retrieved shows:", shows);
-
-        const testShowFound = shows.some(s => s.id === 999999);
-
-        await unfollowShow(999999);
-        console.log("Successfully removed test show");
-
-        return testShowFound
-            ? "Database test passed: Show was successfully saved and retrieved"
-            : "Database test failed: Show was not found after saving";
+        const today = new Date().toISOString().split('T')[0];
+        const stmt = db.prepareSync(`
+        INSERT OR REPLACE INTO show_status 
+        (show_id, last_check_date, has_pending_episodes, last_aired_episode_date) 
+        VALUES (?, ?, ?, ?)
+      `);
+        stmt.executeSync([showId, today, hasPendingEpisodes, lastAiredDate]);
+        stmt.finalizeSync();
     } catch (error) {
-        console.error("Database test failed:", error);
-        return "Database test failed: " + error;
+        console.error("Error updating show status:", error);
     }
 };

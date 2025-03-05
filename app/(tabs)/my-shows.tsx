@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,13 +11,13 @@ import {
   Alert,
 } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { FontAwesome, FontAwesome6 } from '@expo/vector-icons';
-import { getFollowedShows, unfollowShow } from '@/db/db';
+import { AntDesign, FontAwesome, FontAwesome6 } from '@expo/vector-icons';
+import { getFollowedShowsWithStatus, unfollowShow } from '@/db/db';
 import { type Show } from '@/types/db.types';
 import { useTheme } from '@/styles/ThemeContext';
 
 export default function MyShowsScreen() {
-  const [shows, setShows] = useState<Show[]>([]);
+  const [shows, setShows] = useState<(Show & { hasPending: boolean })[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
@@ -31,8 +31,7 @@ export default function MyShowsScreen() {
 
   const loadShows = async () => {
     try {
-      console.log('Loading shows...');
-      const followedShows = await getFollowedShows();
+      const followedShows = await getFollowedShowsWithStatus();
       console.log(`Loaded ${followedShows.length} shows`);
       setShows(followedShows);
     } catch (error) {
@@ -104,6 +103,7 @@ export default function MyShowsScreen() {
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
             You haven't followed any shows yet.
           </Text>
+
           <TouchableOpacity
             style={[styles.searchButton, { backgroundColor: colors.primary }]}
             onPress={() => router.push('/')}
@@ -165,6 +165,17 @@ export default function MyShowsScreen() {
                 style={styles.poster}
                 resizeMode="cover"
               />
+
+              {item.hasPending && (
+                <View style={[styles.pendingBadge]}>
+                  <AntDesign
+                    name="exclamationcircle"
+                    size={20}
+                    color={colors.tertiary}
+                  />
+                </View>
+              )}
+
               <View style={styles.showInfo}>
                 <Text style={[styles.title, { color: colors.text }]}>
                   {item.name}
@@ -179,6 +190,7 @@ export default function MyShowsScreen() {
                   {item.overview || 'No overview available'}
                 </Text>
               </View>
+
               <TouchableOpacity
                 style={styles.unfollowButton}
                 onPress={() => handleUnfollow(item.id, item.name)}
@@ -272,5 +284,10 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     position: 'absolute',
+  },
+  pendingBadge: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
   },
 });

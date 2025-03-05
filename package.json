@@ -1,7 +1,7 @@
 {
   "name": "binger",
   "main": "index.js",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "private": true,
   "scripts": {
     "dev": "EXPO_NO_TELEMETRY=1 expo start",

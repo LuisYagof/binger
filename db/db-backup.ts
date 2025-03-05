@@ -1,11 +1,11 @@
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
-import { addEpisode, followShow, getFollowedShows, getShowEpisodes } from '@/db/db';
+import { addEpisode, followShow, getFollowedShowsWithStatus, getShowEpisodes } from '@/db/db';
 
 export const exportData = async () => {
     try {
-        const shows = await getFollowedShows();
+        const shows = await getFollowedShowsWithStatus();
         const episodesPromises = shows.map(show => getShowEpisodes(show.id));
         const allEpisodes = await Promise.all(episodesPromises);
 
