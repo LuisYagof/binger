@@ -1,19 +1,21 @@
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
-import { addEpisode, followShow, getFollowedShowsWithStatus, getShowEpisodes } from '@/db/db';
+import { addEpisode, followShow, getApiKeyFromDb, getFollowedShowsWithStatus, getShowEpisodes, saveApiKeyToDb } from '@/db/db';
 
 export const exportData = async () => {
     try {
         const shows = await getFollowedShowsWithStatus();
         const episodesPromises = shows.map(show => getShowEpisodes(show.id));
         const allEpisodes = await Promise.all(episodesPromises);
+        const apiKey = await getApiKeyFromDb();
 
         const exportData = {
             shows,
             episodes: allEpisodes.flat(),
             version: 1,
-            exportDate: new Date().toISOString()
+            exportDate: new Date().toISOString(),
+            apiKey
         };
 
         const jsonString = JSON.stringify(exportData);
@@ -49,6 +51,10 @@ export const importData = async () => {
 
         for (const episode of importData.episodes) {
             await addEpisode(episode);
+        }
+
+        if (importData.apiKey) {
+            await saveApiKeyToDb(importData.apiKey);
         }
 
         return true;
