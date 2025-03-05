@@ -27,7 +27,7 @@ export default function RootLayout() {
         const apiKey = await getApiKeyFromDb();
         if (!apiKey) {
           Alert.alert(
-            'Welcome to TV Show Tracker',
+            'Welcome to Binger',
             'This app uses TMDB API for TV show data. Please add your own TMDB API key in Settings to use the app.',
 
             [
